@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Замовлення піци та напоїв — Практичне 2, Варіант 1</title>
+<style>
+  body { background:#dfe3e8; font-family:"Segoe UI",Tahoma,Arial,sans-serif; display:flex;
+         justify-content:center; padding:24px; }
+  .window { width:556px; background:#f0f0f0; border:1px solid #7a7a7a; border-radius:4px;
+            box-shadow:0 6px 24px rgba(0,0,0,.25); }
+  .titlebar { background:#fff; border-bottom:1px solid #d0d0d0; padding:6px 10px;
+              font-size:13px; display:flex; justify-content:space-between; align-items:center; }
+  .titlebar .ctrls span { margin-left:14px; color:#444; }
+  .body { padding:12px; }
+  .tabs { display:flex; gap:2px; }
+  .tab { padding:5px 18px; border:1px solid #999; border-bottom:none; background:#e8e8e8;
+         cursor:pointer; font-size:13px; border-radius:3px 3px 0 0; }
+  .tab.active { background:#fff; font-weight:600; }
+  .panel { display:none; border:1px solid #999; background:#fff; padding:14px; min-height:230px; }
+  .panel.active { display:block; }
+  table { border-collapse:collapse; }
+  th { text-align:left; color:#444; font-weight:normal; font-size:13px; padding:4px 14px 8px 0; }
+  td { padding:5px 14px 5px 0; font-size:13px; }
+  input[type=number]{ width:64px; padding:3px; border:1px solid #7a9bbf; }
+  input.price{ width:64px; padding:3px; border:1px solid #7a9bbf; }
+  .pizzawrap{ float:right; width:160px; height:160px; border:1px solid #7a7a7a; margin-left:10px;
+              display:flex; align-items:center; justify-content:center; background:#fff; }
+  .pizzawrap img{ max-width:150px; max-height:150px; }
+  .total { font-size:15px; font-weight:bold; padding:14px 2px 8px; }
+  .flow { border:1px solid #999; padding:8px; display:flex; gap:12px; }
+  .flow button{ width:150px; height:36px; font-size:13px; background:#e1e1e1;
+                border:1px solid #adadad; border-radius:3px; cursor:pointer; }
+  .flow button:hover{ background:#d6e6f7; border-color:#7a9bbf; }
+  .note{ font-size:12px; color:#666; text-align:center; margin-top:10px; }
+</style>
+</head>
+<body>
+<div class="window">
+  <div class="titlebar">
+    <span>Замовлення піци та напоїв</span>
+    <span class="ctrls"><span>—</span><span>☐</span><span>✕</span></span>
+  </div>
+  <div class="body">
+    <div class="tabs">
+      <div class="tab active" data-tab="pizza">Піца</div>
+      <div class="tab" data-tab="drinks">Напої</div>
+    </div>
+
+    <!-- Вкладка Піца -->
+    <div class="panel active" id="pizza">
+      <div class="pizzawrap"><img src="pizza.png" alt="Піца"></div>
+      <table>
+        <tr><th>Назва</th><th>Кількість</th><th>Ціна, грн</th></tr>
+        <tr><td>Маргарита</td><td><input type="number" min="0" max="100" value="0" class="qty"></td>
+            <td><input class="price" value="120"></td></tr>
+        <tr><td>Пепероні</td><td><input type="number" min="0" max="100" value="0" class="qty"></td>
+            <td><input class="price" value="150"></td></tr>
+        <tr><td>Гавайська</td><td><input type="number" min="0" max="100" value="0" class="qty"></td>
+            <td><input class="price" value="140"></td></tr>
+      </table>
+    </div>
+
+    <!-- Вкладка Напої -->
+    <div class="panel" id="drinks">
+      <table>
+        <tr><th>Назва</th><th>Кількість</th><th>Ціна, грн</th></tr>
+        <tr><td>Сік</td><td><input type="number" min="0" max="100" value="0" class="qty"></td>
+            <td><input class="price" value="35"></td></tr>
+        <tr><td>Кава</td><td><input type="number" min="0" max="100" value="0" class="qty"></td>
+            <td><input class="price" value="40"></td></tr>
+        <tr><td>Чай</td><td><input type="number" min="0" max="100" value="0" class="qty"></td>
+            <td><input class="price" value="25"></td></tr>
+      </table>
+    </div>
+
+    <div class="total" id="total">Вартість замовлення: 0.00 грн</div>
+
+    <!-- FlowLayoutPanel з кнопками -->
+    <div class="flow">
+      <button onclick="order()">Замовити</button>
+      <button onclick="cancel()">Відмінити</button>
+      <button onclick="exitApp()">Вихід</button>
+    </div>
+    <div class="note">Веб-демонстрація логіки форми Windows Forms (Практичне 2, Варіант 1)</div>
+  </div>
+</div>
+
+<script>
+  // перемикання вкладок
+  document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+  });
+
+  // Замовити — обчислення вартості по обох вкладках
+  function order() {
+    const qtys = document.querySelectorAll('.qty');
+    const prices = document.querySelectorAll('.price');
+    let total = 0;
+    for (let i = 0; i < qtys.length; i++) {
+      const q = parseInt(qtys[i].value) || 0;
+      const p = parseFloat((prices[i].value || '0').replace(',', '.'));
+      if (isNaN(p)) { alert('Невірно введена ціна у рядку №' + (i + 1)); return; }
+      total += q * p;
+    }
+    document.getElementById('total').textContent =
+      'Вартість замовлення: ' + total.toFixed(2) + ' грн';
+    alert(total === 0 ? 'Ви не обрали жодної позиції.'
+                      : 'Загальна вартість замовлення: ' + total.toFixed(2) + ' грн');
+  }
+
+  // Відмінити — очистити кількість
+  function cancel() {
+    document.querySelectorAll('.qty').forEach(q => q.value = 0);
+    document.getElementById('total').textContent = 'Вартість замовлення: 0.00 грн';
+  }
+
+  // Вихід
+  function exitApp() {
+    if (confirm('Закрити форму?')) {
+      document.body.innerHTML =
+        '<p style="font-family:Segoe UI;margin-top:40px">Форму закрито. Вкладку можна закрити.</p>';
+    }
+  }
+</script>
+</body>
+</html>
